@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Students;
+use App\Models\Student;
 use Illuminate\Http\Request;
 
-class StudentsController extends Controller
+class StudentController extends Controller
 {
     // Get all students
     public function index()
     {
-        return response()->json(Students::all(), 200);
+        return response()->json(Student::all(), 200);
     }
 
     // Store a new student
@@ -23,14 +23,14 @@ class StudentsController extends Controller
             'course' => 'required|string'
         ]);
 
-        $student = Students::create($request->all());
+        $student = Student::create($request->all());
         return response()->json($student, 201);
     }
 
     // Get a single student
     public function show($id)
     {
-        $student = Students::find($id);
+        $student = Student::find($id);
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
         }
@@ -40,7 +40,7 @@ class StudentsController extends Controller
     // Update a student
     public function update(Request $request, $id)
     {
-        $student = Students::find($id);
+        $student = Student::find($id);
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
         }
@@ -59,7 +59,7 @@ class StudentsController extends Controller
     // Delete a student
     public function destroy($id)
     {
-        $student = Students::find($id);
+        $student = Student::find($id);
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
         }

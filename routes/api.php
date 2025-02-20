@@ -1,11 +1,12 @@
 <?php
-
 use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\StudentsController;
+use App\Http\Controllers\StudentController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-Route::apiResource('employees', EmployeeController::class);
-Route::apiResource('students', StudentsController::class);
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+Route::get('/employees', [EmployeeController::class, 'index']);
+Route::get('/students', [StudentController::class, 'index']);
