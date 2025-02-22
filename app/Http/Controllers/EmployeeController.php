@@ -7,10 +7,24 @@ use Illuminate\Http\Request;
 class EmployeeController extends Controller
 {
     // Get all employees
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Employee::all(), 200);
+        // $query = Employee::query();
+        
+        // if ($request->has('search')) {
+        //     $search = $request->search;
+        //     $query->where('name', 'LIKE', "%$search%")
+        //     ->orWhere('email', 'LIKE', "%$search%"); 
+        // }
+
+        // return response()->json($query->get(), 200);
+        $query = Employee::query();
+        if ($request->has('name')) {
+            $query->where('name', 'like', '%'. $request->name);
+        }
+        return response($query->get());
     }
+
 
     // Store a new employee
     public function store(Request $request)
