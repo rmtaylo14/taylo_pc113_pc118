@@ -13,18 +13,33 @@ class StudentController extends Controller
         return response()->json(Student::all(), 200);
     }
 
-    // Store a new student
-    public function store(Request $request)
+    public function search(Request $request)
     {
-        $request->validate([
+        $search = $request->get('searchlist');
+        $student = Student::where('name', 'like', '%' .$search. '%')
+        ->orWhere('course', 'like', '%' .$search. '%')
+        ->orWhere('id', 'like', '%' .$search. '%')->get();
+
+        return response()->json([
+            'students' => $student
+        ]);
+    }
+
+    // Store a new student
+    public function create(Request $request)
+    {
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students',
+            'email' => 'required|email|unique:students,email',
             'age' => 'required|integer',
-            'course' => 'required|string'
+            'course' => 'required|string',
         ]);
 
-        $student = Student::create($request->all());
-        return response()->json($student, 201);
+        $student = Student::create($validatedData);
+        return response()->json([
+            'message' => 'Student created successfully',
+            'student' => $student
+        ], 201);
     }
 
     // Get a single student
@@ -41,30 +56,34 @@ class StudentController extends Controller
     public function update(Request $request, $id)
     {
         $student = Student::find($id);
-        if (!$student) {
+        if (is_null($student)) {
             return response()->json(['message' => 'Student not found'], 404);
         }
 
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'string|max:255',
-            'email' => 'email|unique:students,email,' . $id,
+            'email' => 'email|unique:students,email',
             'age' => 'integer',
-            'course' => 'string'
+            'course' => 'string',
         ]);
 
-        $student->update($request->all());
-        return response()->json($student, 200);
+        $student->update($validatedData);
+        return response()->json([
+            'message' => 'Student updated successfully',
+            'students' => $student
+        ], 200);
     }
 
     // Delete a student
-    public function destroy($id)
+    public function delete($id)
     {
         $student = Student::find($id);
-        if (!$student) {
+        if (is_null($student)) {
             return response()->json(['message' => 'Student not found'], 404);
         }
 
         $student->delete();
-        return response()->json(['message' => 'Student deleted'], 200);
+        return response()->json([
+            'message' => 'Student deleted succesfully'], 200);
     }
 }

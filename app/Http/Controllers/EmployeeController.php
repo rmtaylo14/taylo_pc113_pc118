@@ -7,27 +7,25 @@ use Illuminate\Http\Request;
 class EmployeeController extends Controller
 {
     // Get all employees
-    public function index(Request $request)
+    public function index()
     {
-        // $query = Employee::query();
-        
-        // if ($request->has('search')) {
-        //     $search = $request->search;
-        //     $query->where('name', 'LIKE', "%$search%")
-        //     ->orWhere('email', 'LIKE', "%$search%"); 
-        // }
-
-        // return response()->json($query->get(), 200);
-        $query = Employee::query();
-        if ($request->has('name')) {
-            $query->where('name', 'like', '%'. $request->name);
-        }
-        return response($query->get());
+        return response()->json(Employee::all(), 200);
     }
 
+    public function search(Request $request)
+    {
+        $search = $request->get('searchlist');
+        $employee = Employee::where('name', 'like', '%' .$search. '%')
+        ->orWhere('position', 'like', '%' .$search. '%')
+        ->orWhere('id', 'like', '%' .$search. '%')->get();
+
+        return response()->json([
+            'employees' => $employee
+        ]);
+    }
 
     // Store a new employee
-    public function store(Request $request)
+    public function create(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -54,23 +52,26 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $employee = Employee::find($id);
-        if (!$employee) {
+        if (is_null($employee)) {
             return response()->json(['message' => 'Employee not found'], 404);
         }
 
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'string|max:255',
             'email' => 'email|unique:employees,email,' . $id,
             'position' => 'string',
             'salary' => 'numeric'
         ]);
 
-        $employee->update($request->all());
-        return response()->json($employee, 200);
+        $employee->update($validatedData);
+        return response()->json([
+            'message' => 'Employee updated successfully',
+            'employees' => $employee
+        ], 200);
     }
 
     // Delete an employee
-    public function destroy($id)
+    public function delete($id)
     {
         $employee = Employee::find($id);
         if (!$employee) {
