@@ -24,6 +24,7 @@ class EmployeeController extends Controller
         ]);
     }
 
+
     // Store a new employee
     public function create(Request $request)
     {

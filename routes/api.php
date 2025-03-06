@@ -3,10 +3,22 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return response()->json([
+        'message' => 'Authenticated User',
+        'user' => $request->user()
+    ]);
+});
+
+Route::post('/login', [AuthController::class, 'login']); 
+
 
 Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/students', [StudentController::class, 'index']);
@@ -25,3 +37,5 @@ Route::put('/students/{id}', [StudentController::class, 'update']);
 
 Route::delete('/employees/{id}', [EmployeeController::class, 'delete']);
 Route::delete('/students/{id}', [StudentController::class, 'delete']);
+
+
