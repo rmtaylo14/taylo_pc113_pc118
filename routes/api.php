@@ -1,9 +1,11 @@
 <?php
+use App\Http\Controllers\DashboardController; ////////
+use App\Http\Controllers\UserController; ///////
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
+
 
 
 Route::get('/user', function (Request $request) {
@@ -17,7 +19,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     ]);
 });
 
-Route::post('/login', [AuthController::class, 'login']); 
+Route::post('/login', [UserController::class, 'login']); 
 
 
 Route::get('/employees', [EmployeeController::class, 'index']);
@@ -37,5 +39,14 @@ Route::put('/students/{id}', [StudentController::class, 'update']);
 
 Route::delete('/employees/{id}', [EmployeeController::class, 'delete']);
 Route::delete('/students/{id}', [StudentController::class, 'delete']);
+
+//Admin
+Route::middleware(['auth:sanctum','role:admin'])->group(function(){
+    Route::get('/user', [UserController::class, 'index']);
+});
+//User
+Route::middleware(['auth:sanctum','role:user'])->group(function(){
+    Route::get('/userdashboard', [DashboardController::class, 'index']);
+});
 
 
