@@ -4,59 +4,66 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
     <title>Admin Dashboard</title>
 
-    <!-- Fonts and Tailwind -->
+    <!-- Fonts and Icons -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href='https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap' rel='stylesheet'>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="dark:bg-gray-950 min-h-screen flex">
+<body class="bg-light min-vh-100 d-flex text-dark">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-white dark:bg-gray-900 shadow-md min-h-screen">
-        <div class="p-6">
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Admin Panel</h1>
-            <nav>
-                <a href="#" class="flex items-center p-3 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-md mb-2">
-                    <i class='bx bx-home mr-2'></i> Users
-                </a>
-                <button id="logoutBtn" class="w-full flex items-center p-3 text-red-600 hover:bg-red-100 dark:hover:bg-red-800 rounded-md">
-                    <i class='bx bx-log-out mr-2'></i> Logout
-                </button>
-            </nav>
-        </div>
+    <aside class="bg-white shadow-lg p-4 d-none d-md-block" style="width: 250px;">
+        <h1 class="h4 fw-bold mb-4">Admin Panel</h1>
+        <nav class="nav flex-column">
+            <a href="dashboard.php" class="nav-link text-dark py-2"><i class='bx bx-home me-2'></i>Dashboard</a>
+            <a href="users.php" class="nav-link text-dark py-2"><i class='bx bx-user me-2'></i>Users</a>
+            <a href="employees.php" class="nav-link text-dark py-2"><i class='bx bx-briefcase me-2'></i>Employees</a>
+            <a href="students.php" class="nav-link text-dark py-2"><i class='bx bx-book me-2'></i>Students</a>
+            <a href="#" id="logoutButton" class="nav-link text-danger py-2"><i class='bx bx-log-out me-2'></i>Logout</a>
+        </nav>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-grow p-8">
-        <h2 class="text-3xl font-bold mb-6 dark:text-white">Welcome, <span id="userName">Admin</span>!</h2>
-
-        <!-- Latest Orders Table -->
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <h3 class="text-lg font-semibold mb-4 dark:text-gray-200">Latest Orders</h3>
-            <table class="w-full table-auto">
-                <!-- Table content goes here -->
-            </table>
-        </div>
+    <main id="mainContent" class="flex-grow-1 p-4">
     </main>
 
-    <!-- Logout Script -->
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Handle logout button click
-        document.getElementById('logoutBtn').addEventListener('click', function() {
-            if (confirm('You have been successfully logged out!')) {
-                localStorage.removeItem('token'); // Remove token
-                window.location.href = 'index.php'; // Redirect to login page
+        document.addEventListener("DOMContentLoaded", () => {
+            let lastPage = localStorage.getItem("lastPage") || "dashboard";
+
+            if (lastPage === "dashboard") {
+                loadDashboard();
             }
+
+            document.getElementById("logoutButton").addEventListener("click", () => {
+                logout();
+            });
         });
 
-        // Set user's name if available
-        const userName = localStorage.getItem('userName') || 'Admin';
-        document.getElementById('userName').textContent = userName;
-    </script>
+        function loadDashboard() {
+            let mainContent = document.getElementById("mainContent");
+            mainContent.innerHTML = "";
+            setTimeout(() => {
+                mainContent.innerHTML = `
+                    <h2 class="h3 mb-4">Dashboard</h2>
+                    <p>Welcome to the dashboard. Select an option from the sidebar.</p>
+                `;
+            }, 300);
+        }
 
+        function logout() {
+            if (confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem("token");
+                window.location.href = "login.php";
+            }
+        }
+    </script>
 </body>
 </html>
