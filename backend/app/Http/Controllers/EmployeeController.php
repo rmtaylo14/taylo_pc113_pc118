@@ -14,7 +14,7 @@ class EmployeeController extends Controller
 
     public function search(Request $request)
     {
-        $search = $request->get('searchlist');
+        $search = $request->get('search');
         $employee = Employee::where('name', 'like', '%' .$search. '%')
         ->orWhere('position', 'like', '%' .$search. '%')
         ->orWhere('id', 'like', '%' .$search. '%')->get();

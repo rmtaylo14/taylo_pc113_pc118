@@ -25,8 +25,8 @@ Route::post('/login', [UserController::class, 'login']);
 Route::get('/employees', [EmployeeController::class, 'index']);
 Route::get('/students', [StudentController::class, 'index']);
 
-Route::get('/employees/search', [EmployeeController::class, 'search']);
-Route::get('/students/search', [StudentController::class,'search']);
+Route::get('/employees', [EmployeeController::class, 'search']);
+Route::get('/students', [StudentController::class,'search']);
 
 Route::post('/students', [StudentController::class, 'create']);
 Route::post('/employees', [EmployeeController::class, 'create']);
