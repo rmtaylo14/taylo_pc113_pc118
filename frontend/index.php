@@ -12,7 +12,7 @@
 </head>
 <body class="bg-light d-flex justify-content-center align-items-center min-vh-100">
     <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
-        <h1 class="text-center mb-4">Welcome Back!</h1>
+        <h1 class="text-center mb-4">Welcome</h1>
         <div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
         <form id="loginForm">
             <div class="mb-3">
@@ -22,15 +22,15 @@
             <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
                 <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
-                <a href="#" class="small text-decoration-none">Forgot Password?</a>
+                <!-- <a href="#" class="small text-decoration-none">Forgot Password?</a> -->
             </div>
-            <div class="mb-3 form-check">
+            <!-- <div class="mb-3 form-check">
                 <input type="checkbox" class="form-check-input" id="remember" name="remember" checked>
                 <label class="form-check-label" for="remember">Remember me</label>
-            </div>
-            <div class="d-flex justify-content-between">
+            </div> -->
+            <!-- <div class="d-flex justify-content-between">
                 <a href="#" class="small text-decoration-none">Create Account</a>
-            </div>
+            </div> -->
             <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
         </form>
     </div>
