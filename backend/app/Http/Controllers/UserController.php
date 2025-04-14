@@ -19,8 +19,16 @@ class UserController extends Controller
                 ], 500);
             }
         }
-    
-        public function login(Request $request)
+        
+    public function user()
+    {
+        return response()->json([
+            'user' => Auth::user(),
+            'message' => 'Authenticated User',
+        ], 200);
+    }
+
+    public function login(Request $request)
         {
             try {
                 if (Auth::attempt([
@@ -44,4 +52,22 @@ class UserController extends Controller
                 ], 500);
         }
     }
+
+        public function logout(Request $request)
+    {
+        try {
+            Auth::logout();
+            return response()->json([
+                'message' => 'Logged out successfully',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred during logout',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
+
+
+

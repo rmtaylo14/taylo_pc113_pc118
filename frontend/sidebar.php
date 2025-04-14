@@ -20,6 +20,7 @@
     <aside class="bg-white shadow-lg p-4 d-none d-md-block" style="width: 250px;">
         <h1 class="h4 fw-bold mb-4">Admin Panel</h1>
         <nav class="nav flex-column">
+            <a href="profile.php" class="nav-link text-dark py-2"><i class='bx bx-home me-2'></i>Profile</a>
             <a href="dashboard.php" class="nav-link text-dark py-2"><i class='bx bx-home me-2'></i>Dashboard</a>
             <a href="users.php" class="nav-link text-dark py-2"><i class='bx bx-user me-2'></i>Users</a>
             <a href="employees.php" class="nav-link text-dark py-2"><i class='bx bx-briefcase me-2'></i>Employees</a>
