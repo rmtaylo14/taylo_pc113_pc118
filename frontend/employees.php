@@ -112,155 +112,118 @@ include 'sidebar.php';
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
     <script>
-        $(document).ready(function() {
-            var table = $('#employeesTable').DataTable({
-                responsive: true,
-                paging: true,
-                searching: true,
-                ajax: {
-                    url: "http://127.0.0.1:8000/api/employees",
-                    type: "GET",
-                    dataSrc: "employees"
+    $(document).ready(function () {
+        var table = $('#employeesTable').DataTable({
+            responsive: true,
+            paging: true,
+            searching: true,
+            ajax: {
+                url: "http://127.0.0.1:8000/api/employees",
+                type: "GET",
+                dataSrc: ""
+            },
+            columns: [
+                { data: "id" },
+                { data: "name" },
+                { data: "email" },
+                { data: "position" },
+                { data: "salary", render: $.fn.dataTable.render.number(',', '.', 2, '₱') },
+                {
+                    data: null,
+                    render: function(data, type, row) {
+                        return `
+                            <button class="edit-btn" data-id="${row.id}">📝</button>
+                            <button class="delete-btn" data-id="${row.id}">❌</button>
+                        `;
+                    }
+                }
+            ]
+        });
+
+        $('#openAddModal').on('click', function(e) {
+            e.preventDefault();
+            $('#addEmployeeModal').css('display', 'flex');
+        });
+
+        $('#addEmployeeBtn').on('click', function() {
+            $.ajax({
+                url: "http://127.0.0.1:8000/api/employees",
+                type: "POST",
+                data: {
+                    name: $('#newEmployeeName').val(),
+                    email: $('#newEmployeeEmail').val(),
+                    position: $('#newEmployeePosition').val(),
+                    salary: $('#newEmployeeSalary').val()
                 },
-                columns: [
-                    { data: "id" },
-                    { data: "name" },
-                    { data: "email" },
-                    { data: "position" },
-                    { data: "salary", render: $.fn.dataTable.render.number(',', '.', 2, '$') },
-                    {
-                        data: null,
-                        render: function(data, type, row) {
-                            return `
-                                <button class="edit-btn" data-id="${row.id}" title="Edit">📝</button>
-                                <button class="delete-btn" data-id="${row.id}" title="Delete">❌</button>
-                            `;
-                        }
-                    }
-                ]
-            });
-
-            // Show Add Modal
-            $('#openAddModal').on('click', function(e) {
-                e.preventDefault();
-                $('#addEmployeeModal').css('display', 'flex');
-            });
-
-            // Add Employee Submit
-            $('#addEmployeeBtn').on('click', function() {
-                var name = $('#newEmployeeName').val();
-                var email = $('#newEmployeeEmail').val();
-                var position = $('#newEmployeePosition').val();
-                var salary = $('#newEmployeeSalary').val();
-
-                $.ajax({
-                    url: "http://127.0.0.1:8000/api/employees",
-                    type: "POST",
-                    data: {
-                        name: name,
-                        email: email,
-                        position: position,
-                        salary: salary
-                    },
-                    success: function(response) {
-                        alert("Employee added successfully");
-                        $('#addEmployeeModal').hide();
-                        table.ajax.reload();
-                        $('#newEmployeeName, #newEmployeeEmail, #newEmployeePosition, #newEmployeeSalary').val('');
-                    },
-                    error: function() {
-                        alert("Error adding employee.");
-                    }
-                });
-            });
-
-            // Hide modals when clicking outside
-            $(window).on('click', function(e) {
-                if ($(e.target).is('#addEmployeeModal')) {
+                success: function () {
+                    alert("Employee added successfully");
                     $('#addEmployeeModal').hide();
+                    $('#newEmployeeName, #newEmployeeEmail, #newEmployeePosition, #newEmployeeSalary').val('');
+                    table.ajax.reload();
+                },
+                error: function () {
+                    alert("Failed to add employee.");
                 }
-                if ($(e.target).is('#editEmployeeModal')) {
-                    $('#editEmployeeModal').hide();
-                }
-            });
-
-            // Edit Button Handler
-            $('#employeesTable').on('click', '.edit-btn', function() {
-                var id = $(this).data('id');
-                loadEmployeeData(id);
-            });
-
-            // Delete Button Handler
-            $('#employeesTable').on('click', '.delete-btn', function() {
-                var id = $(this).data('id');
-                if (confirm("Are you sure you want to delete this employee?")) {
-                    deleteEmployee(id);
-                }
-            });
-
-            // Save Changes
-            $('#saveChanges').on('click', function() {
-                var id = $('#editEmployeeModal').data('id');
-                var name = $('#editEmployeeName').val();
-                var email = $('#editEmployeeEmail').val();
-                var position = $('#editEmployeePosition').val();
-                var salary = $('#editEmployeeSalary').val();
-                updateEmployee(id, name, email, position, salary);
             });
         });
 
-        function loadEmployeeData(id) {
-            $.ajax({
-                url: `http://127.0.0.1:8000/api/employees/${id}`,
-                type: 'GET',
-                success: function(data) {
-                    $('#editEmployeeName').val(data.name);
-                    $('#editEmployeeEmail').val(data.email);
-                    $('#editEmployeePosition').val(data.position);
-                    $('#editEmployeeSalary').val(data.salary);
-                    $('#editEmployeeModal').data('id', id).css('display', 'flex');
-                },
-                error: function() {
-                    alert("Error fetching employee data.");
-                }
+        $('#employeesTable').on('click', '.edit-btn', function () {
+            var id = $(this).data('id');
+            $.get(`http://127.0.0.1:8000/api/employees/${id}`, function(data) {
+                $('#editEmployeeName').val(data.name);
+                $('#editEmployeeEmail').val(data.email);
+                $('#editEmployeePosition').val(data.position);
+                $('#editEmployeeSalary').val(data.salary);
+                $('#editEmployeeModal').data('id', id).css('display', 'flex');
             });
-        }
+        });
 
-        function updateEmployee(id, name, email, position, salary) {
+        $('#saveChanges').on('click', function () {
+            var id = $('#editEmployeeModal').data('id');
             $.ajax({
                 url: `http://127.0.0.1:8000/api/employees/${id}`,
-                type: 'PUT',
+                type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify({
-                    name: name,
-                    email: email,
-                    position: position,
-                    salary: salary
+                    name: $('#editEmployeeName').val(),
+                    email: $('#editEmployeeEmail').val(),
+                    position: $('#editEmployeePosition').val(),
+                    salary: $('#editEmployeeSalary').val()
                 }),
-                success: function(response) {
-                    alert('Employee updated successfully');
-                    $('#employeesTable').DataTable().ajax.reload();
+                success: function () {
+                    alert("Employee updated successfully");
                     $('#editEmployeeModal').hide();
+                    table.ajax.reload();
                 },
-                error: function() {
-                    alert('Error updating employee');
+                error: function () {
+                    alert("Failed to update employee.");
                 }
             });
-        }
+        });
 
-        function deleteEmployee(id) {
-            $.ajax({
-                url: `http://127.0.0.1:8000/api/employees/${id}`,
-                type: 'DELETE',
-                success: function() {
-                    alert('Employee deleted successfully');
-                    $('#employeesTable').DataTable().ajax.reload();
-                },
-                error: function() {
-                    alert('Error deleting employee');
-                }
-            });
-        }
-    </script>
+        $('#employeesTable').on('click', '.delete-btn', function () {
+            var id = $(this).data('id');
+            if (confirm("Are you sure you want to delete this employee?")) {
+                $.ajax({
+                    url: `http://127.0.0.1:8000/api/employees/${id}`,
+                    type: "DELETE",
+                    success: function () {
+                        alert("Employee deleted successfully");
+                        table.ajax.reload();
+                    },
+                    error: function () {
+                        alert("Failed to delete employee.");
+                    }
+                });
+            }
+        });
+
+        $(window).on('click', function(e) {
+            if ($(e.target).is('#addEmployeeModal')) $('#addEmployeeModal').hide();
+            if ($(e.target).is('#editEmployeeModal')) $('#editEmployeeModal').hide();
+        });
+    });
+</script>
+
 </body>
 </html>

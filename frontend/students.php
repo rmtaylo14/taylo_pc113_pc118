@@ -107,25 +107,25 @@ include 'sidebar.php';
             paging: true,
             searching: true,
             ajax: {
-            url: "http://127.0.0.1:8000/api/students",
-            type: "GET",
-            dataSrc: "students"
+                url: "http://127.0.0.1:8000/api/students",
+                type: "GET",
+                dataSrc: ""
             },
             columns: [
-            { data: "id" },
-            { data: "name" },
-            { data: "email" },
-            { data: "age" },
-            { data: "course" },
-            {
-                data: null,
-                render: function(data, type, row) {
-                return `
-                    <button class="edit-btn" data-id="${row.id}">📝</button>
-                    <button class="delete-btn" data-id="${row.id}">❌</button>
-                `;
+                { data: "id" },
+                { data: "name" },
+                { data: "email" },
+                { data: "age" },
+                { data: "course" },
+                {
+                    data: null,
+                    render: function(data, type, row) {
+                        return `
+                            <button class="edit-btn" data-id="${row.id}">📝</button>
+                            <button class="delete-btn" data-id="${row.id}">❌</button>
+                        `;
+                    }
                 }
-            }
             ]
         });
 
@@ -136,74 +136,74 @@ include 'sidebar.php';
 
         $('#addStudentBtn').on('click', function() {
             $.ajax({
-            url: "http://127.0.0.1:8000/api/students",
-            type: "POST",
-            data: {
-                name: $('#newStudentName').val(),
-                email: $('#newStudentEmail').val(),
-                age: $('#newStudentAge').val(),
-                course: $('#newStudentCourse').val()
-            },
-            success: function () {
-                alert("Student added successfully");
-                $('#addStudentModal').hide();
-                $('#newStudentName, #newStudentEmail, #newStudentAge, #newStudentCourse').val('');
-                table.ajax.reload();
-            },
-            error: function () {
-                alert("Failed to add student.");
-            }
+                url: "http://127.0.0.1:8000/api/students",
+                type: "POST",
+                data: {
+                    name: $('#newStudentName').val(),
+                    email: $('#newStudentEmail').val(),
+                    age: $('#newStudentAge').val(),
+                    course: $('#newStudentCourse').val()
+                },
+                success: function () {
+                    alert("Student added successfully");
+                    $('#addStudentModal').hide();
+                    $('#newStudentName, #newStudentEmail, #newStudentAge, #newStudentCourse').val('');
+                    table.ajax.reload();
+                },
+                error: function () {
+                    alert("Failed to add student.");
+                }
             });
         });
 
         $('#studentsTable').on('click', '.edit-btn', function () {
             var id = $(this).data('id');
             $.get(`http://127.0.0.1:8000/api/students/${id}`, function(data) {
-            $('#editStudentName').val(data.name);
-            $('#editStudentEmail').val(data.email);
-            $('#editStudentAge').val(data.age);
-            $('#editStudentCourse').val(data.course);
-            $('#editStudentModal').data('id', id).css('display', 'flex');
+                $('#editStudentName').val(data.name);
+                $('#editStudentEmail').val(data.email);
+                $('#editStudentAge').val(data.age);
+                $('#editStudentCourse').val(data.course);
+                $('#editStudentModal').data('id', id).css('display', 'flex');
             });
         });
 
         $('#saveStudentChanges').on('click', function () {
             var id = $('#editStudentModal').data('id');
             $.ajax({
-            url: `http://127.0.0.1:8000/api/students/${id}`,
-            type: "PUT",
-            contentType: "application/json",
-            data: JSON.stringify({
-                name: $('#editStudentName').val(),
-                email: $('#editStudentEmail').val(),
-                age: $('#editStudentAge').val(),
-                course: $('#editStudentCourse').val()
-            }),
-            success: function () {
-                alert("Student updated successfully");
-                $('#editStudentModal').hide();
-                table.ajax.reload();
-            },
-            error: function () {
-                alert("Failed to update student.");
-            }
+                url: `http://127.0.0.1:8000/api/students/${id}`,
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    name: $('#editStudentName').val(),
+                    email: $('#editStudentEmail').val(),
+                    age: $('#editStudentAge').val(),
+                    course: $('#editStudentCourse').val()
+                }),
+                success: function () {
+                    alert("Student updated successfully");
+                    $('#editStudentModal').hide();
+                    table.ajax.reload();
+                },
+                error: function () {
+                    alert("Failed to update student.");
+                }
             });
         });
 
         $('#studentsTable').on('click', '.delete-btn', function () {
             var id = $(this).data('id');
             if (confirm("Are you sure you want to delete this student?")) {
-            $.ajax({
-                url: `http://127.0.0.1:8000/api/students/${id}`,
-                type: "DELETE",
-                success: function () {
-                alert("Student deleted successfully");
-                table.ajax.reload();
-                },
-                error: function () {
-                alert("Failed to delete student.");
-                }
-            });
+                $.ajax({
+                    url: `http://127.0.0.1:8000/api/students/${id}`,
+                    type: "DELETE",
+                    success: function () {
+                        alert("Student deleted successfully");
+                        table.ajax.reload();
+                    },
+                    error: function () {
+                        alert("Failed to delete student.");
+                    }
+                });
             }
         });
 
@@ -211,7 +211,7 @@ include 'sidebar.php';
             if ($(e.target).is('#addStudentModal')) $('#addStudentModal').hide();
             if ($(e.target).is('#editStudentModal')) $('#editStudentModal').hide();
         });
-        });
+    });
     </script>
     </body>
 </html>

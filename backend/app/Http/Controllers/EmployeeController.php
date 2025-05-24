@@ -7,6 +7,13 @@ use Illuminate\Http\Request;
 class EmployeeController extends Controller
 {
     // Get all employees
+
+    public function getEmployees()
+{
+    $employees = Employee::all();  // Or a more specific query if needed
+    return response()->json(['employeessss' => $employees]);
+}
+
     public function index()
     {
         return response()->json(Employee::all(), 200);
