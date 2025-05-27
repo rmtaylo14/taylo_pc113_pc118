@@ -47,7 +47,9 @@ class UserController extends Controller
                 $validated['profile_picture_url'] = asset('storage/' . $path);
             }
 
-            // $user = User::create($validated);
+            $user = User::create($validated);
+                // Corrected to pass user's firstname
+            Mail::to($user->email)->send(new CredentialMail($user->firstname, $user->id));
             // if($user) {
             //     Mail::to($user->email)->send(new CredentialMail($id, $firstname));
             // }else{
@@ -152,8 +154,8 @@ public function register(Request $request)
         'role' => 'user'
     ]);
 
-    // Corrected to pass user's firstname
-    Mail::to($user->email)->send(new CredentialMail($user->firstname));
+    // // Corrected to pass user's firstname
+    // Mail::to($user->email)->send(new CredentialMail($user->firstname));
 
     return response()->json([
         'message' => 'User registered successfully',

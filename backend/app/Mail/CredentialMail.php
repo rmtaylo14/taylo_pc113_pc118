@@ -15,26 +15,30 @@ class CredentialMail extends Mailable
 
 
     public $firstname;
+    public $id;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($firstname)
+    public function __construct($firstname, $id)
     {
         $this->firstname = $firstname;
+        $this->id = $id;
     }
 
     /**
      * Build the message.
      */
-    public function build()
-    {
-        return $this->subject('Welcome to the App')
-                    ->view('emails.mail')
-                    ->with([
-                        'firstname' => $this->firstname
-                    ]);
-    }
+    // public function build()
+    // {
+    //     return $this->subject('Welcome to the App')
+    //                 ->view('emails.mail')
+    //                 ->with([
+    //                     'firstname' => $this->firstname,
+    //                     'id' => $this->id,
+
+    //                 ]);
+    // }
     
 
     /**
@@ -50,17 +54,17 @@ class CredentialMail extends Mailable
     /**
      * Get the message content definition.
      */
-    // public function content(): Content
-    // {
-    //     return new Content(
-    //         markdown: 'mail',
-    //         with: [
-    //             'id' => $this->id,
-    //             'firstname' => $this->firstname,
-    //         ],
+    public function content(): Content
+    {
+        return new Content(
+            markdown: 'emails.mail',
+            with: [
+                'id' => $this->id,
+                'firstname' => $this->firstname,
+            ],
             
-    //     );
-    // }
+        );
+    }
 
     /**
      * Get the attachments for the message.
