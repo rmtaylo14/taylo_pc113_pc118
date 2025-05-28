@@ -7,6 +7,8 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AuthController;
+use App\Http\Middleware\AccessMiddleware;
+use App\Http\Controllers\TokenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -91,5 +93,10 @@ Route::middleware('auth:sanctum')->get('/user/orders', [OrderController::class, 
 Route::middleware('auth:sanctum')->put('/orders/{id}/status', [OrderController::class, 'updateStatus']);
 
 
-
 Route::get('/deliveries', [OrderController::class, 'deliveries']);
+
+
+// Token-based access control
+Route::middleware('access')->group(function(){
+    Route::get('/test', [TokenController::class, 'index']);
+});
