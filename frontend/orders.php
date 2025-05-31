@@ -26,14 +26,13 @@ include 'sidebar.php';
     <h3 class="mt-5">Checkout List</h3>
     <table class="table table-bordered">
       <thead>
-        <tr><th>ID</th><th>Name</th><th>Description</th><th>Price</th><th>Available</th><th>Image</th><th>Actions</th></tr>
+        <tr><th>ID</th><th>Name</th><th>Description</th><th>Price</th><th>Image</th><th>Actions</th></tr>
       </thead>
       <tbody id="checkout-list"></tbody>
     </table>
 
     <div class="d-flex justify-content-between align-items-center mb-3">
       <strong>Total: ₱<span id="total">0.00</span></strong>
-      <!-- now links to orders.php -->
       <button id="place-order-btn" class="btn btn-primary" disabled>Place Order</button>
     </div>
   </div>
@@ -51,14 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
           .addEventListener('click', () => goToOrderSummary());
 });
 
-// ---------------- API ----------------
 function fetchMenuItems(token){
   fetch("http://127.0.0.1:8000/api/index/menu",{headers:{Authorization:`Bearer ${token}`}})
       .then(r=>r.json()).then(renderFoodItems)
       .catch(()=>alert("Failed to load food items."));
 }
 
-// ---------------- RENDER FOOD ----------------
 function renderFoodItems(data){
   const c = document.getElementById('food-list'); c.innerHTML='';
   data.forEach(food=>{
@@ -75,7 +72,6 @@ function renderFoodItems(data){
   });
 }
 
-// ---------------- CART ----------------
 function addToCart(f){ checkout.push(f); updateCheckout(); }
 function removeItem(i){ checkout.splice(i,1); updateCheckout(); }
 
@@ -89,7 +85,7 @@ function updateCheckout(){
     list.insertAdjacentHTML('beforeend',`
       <tr>
         <td>${it.id}</td><td>${it.name}</td><td>${it.description}</td>
-        <td>₱${(+it.price).toFixed(2)}</td><td>${it.available?'Yes':'No'}</td>
+        <td>₱${(+it.price).toFixed(2)}</td>
         <td><img src="http://127.0.0.1:8000/storage/${it.image_path}" width="50"></td>
         <td><button class="btn btn-sm btn-danger" onclick="removeItem(${i})">Remove</button></td>
       </tr>`);
@@ -98,15 +94,10 @@ function updateCheckout(){
   btn.disabled=!checkout.length;
 }
 
-// ---------------- NAVIGATE ----------------
 function goToOrderSummary(){
-  /* Save cart to localStorage and redirect */
   localStorage.setItem('pendingOrder', JSON.stringify(checkout));
   window.location.href = 'orderuser.php';
 }
 </script>
 </body>
 </html>
-
-
-<!-- nachange ni from dollar into peso -->

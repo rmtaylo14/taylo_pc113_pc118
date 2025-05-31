@@ -6,6 +6,7 @@
     <title>Delivery Orders</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
     <style>
         .status-small {
             font-size: 0.8rem;
@@ -19,7 +20,7 @@
             background-color: orange;
         }
         .status-to-be-delivered {
-            background-color: blue;
+            background-color: red;
         }
         .status-delivered {
             background-color: green;
@@ -45,21 +46,6 @@
                 <!-- Orders will be loaded here -->
             </tbody>
         </table>
-    </div>
-
-    <!-- Bootstrap Modal -->
-    <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="orderModalLabel">Order Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body" id="orderModalBody">
-            <!-- Order details will be populated here -->
-          </div>
-        </div>
-      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -98,7 +84,6 @@
                         const amount = order.items.reduce((sum, item) => sum + parseFloat(item.price), 0);
                         const status = order.status || 'pending';
 
-                        // Show orders except those that are delivered or completed
                         if (status !== 'delivered' && status !== 'completed') {
                             const disableUpdate = status === 'to_be_delivered' ? 'disabled' : '';
 
@@ -157,13 +142,11 @@
                     }">${newStatus}</span>
                 `;
 
-                // Disable the Update button if newStatus is 'to_be_delivered'
                 const updateBtn = document.querySelector(`#order-row-${orderId} button.btn-success`);
                 if (newStatus === 'to_be_delivered') {
                     updateBtn.disabled = true;
                 }
 
-                // Remove row only if delivered or completed
                 if (newStatus === 'delivered' || newStatus === 'completed') {
                     document.getElementById(`order-row-${orderId}`).remove();
                     Swal.fire('Success', 'Order marked as delivered and removed from list.', 'success');
@@ -175,44 +158,74 @@
             }
         }
 
-        async function viewOrder(orderId) {
+        async function fetchOrderDetails(orderId, token) {
             try {
-                const response = await fetch(`http://127.0.0.1:8000/api/orders/${orderId}`, {
+                const orderRes = await fetch(`http://127.0.0.1:8000/api/orders/${orderId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                if (!response.ok) throw new Error('Failed to fetch order details');
-                const order = await response.json();
 
-                const modalBody = document.getElementById('orderModalBody');
-                const itemsHtml = order.items.map(item => `
-                    <tr>
-                        <td>${item.name}</td>
-                        <td>₱${parseFloat(item.price).toFixed(2)}</td>
-                    </tr>
-                `).join('');
+                if (!orderRes.ok) throw new Error('Failed to fetch order details');
 
-                modalBody.innerHTML = `
-                    <p><strong>Order ID:</strong> ${order.id}</p>
-                    <p><strong>Status:</strong> ${order.status}</p>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Price (₱)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
-                    <p><strong>Total Amount:</strong> ₱${order.items.reduce((sum, item) => sum + parseFloat(item.price), 0).toFixed(2)}</p>
-                `;
+                const order = await orderRes.json();
+                const user = order.user || {};
 
-                const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
-                orderModal.show();
+                return { order, user };
             } catch (error) {
-                console.error(error);
-                Swal.fire('Error', error.message || 'Unable to load order details.', 'error');
+                console.error('Error fetching order details:', error);
+                throw error;
+            }
+        }
+
+        function buildOrderQRContent({ order, user }) {
+            const baseInfo = `Order ID: ${order.id}
+Status: ${order.status}
+Customer: ${user.name !== undefined && user.name !== null && user.name.trim() !== '' ? user.name : 'N/A'}
+Address: ${user.address || 'N/A'}`;
+
+            const itemsInfo = order.items.map(item => `
+Item: ${item.name}
+Price: ₱ ${parseFloat(item.price).toFixed(2)}`).join('\n');
+
+            const totalAmount = order.items.reduce((sum, item) => sum + parseFloat(item.price), 0).toFixed(2);
+
+            return `${baseInfo}\n${itemsInfo}\nTotal: ₱${totalAmount}`;
+        }
+
+        async function viewOrder(orderId) {
+            const token = localStorage.getItem('token');
+
+            try {
+                const { order, user } = await fetchOrderDetails(orderId, token);
+                const qrContent = buildOrderQRContent({ order, user });
+
+                const qr = new QRious({
+                    value: qrContent,
+                    size: 500,
+                    background: '#ffffff',
+                    foreground: '#000000',
+                    level: 'H'
+                });
+
+                Swal.fire({
+                    title: `<span style="font-size: 20px;">Order #${order.id}</span>`,
+                    html: `
+                        <div style="text-align: center;">
+                            <img src="${qr.toDataURL()}" 
+                                alt="QR Code"
+                                style="border: 8px solid #000000; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 10px; width: 300px; height: 300px;">
+                            <pre style="text-align:left; white-space: pre-wrap; font-size: 14px; margin-top: 10px;">${qrContent}</pre>
+                        </div>
+                    `,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    width: 400,
+                    customClass: {
+                        popup: 'custom-swal-popup'
+                    }
+                });
+
+            } catch (error) {
+                Swal.fire("Error", error.message || "Failed to load order details.", "error");
             }
         }
     </script>

@@ -7,7 +7,6 @@
 
     <title>API Login</title>
 
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light d-flex justify-content-center align-items-center min-vh-100">
@@ -81,11 +80,10 @@
                 return;
             }
 
-            // Save token and role
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.user.role);
 
-            // Redirect based on role
+
             if (data.user.role === 'admin' || data.user.role === 'manager') {
                 window.location.href = 'dashboard.php';
             } else {

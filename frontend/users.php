@@ -7,7 +7,7 @@ include 'sidebar.php';
     <script>
         const role = localStorage.getItem("role");
         if (!role || role !== "admin") {
-        window.location.href = "unauthorized.php";
+            window.location.href = "unauthorized.php";
         }
     </script>
     <meta charset="UTF-8" />
@@ -22,9 +22,13 @@ include 'sidebar.php';
 </head>
 <body>
 <div style="width: 100%; max-width: 1200px; margin: 0; padding: 10px;">
-    <div class="header-bar">
+    <div class="header-bar" style="display: flex; justify-content: space-between; align-items: center;">
         <h3>Users</h3>
-        <a href="#" id="openAddModal" class="user-button">Add User</a>
+        <div>
+            <a href="#" id="openAddModal" class="user-button">Add User</a>
+            <button id="importBtn" class="user-button" style="background-color: #4CAF50; border: none;">Import</button>
+            <button id="exportBtn" class="user-button" style="background-color: #2196F3; border: none;">Export</button>
+        </div>
     </div>
 
     <table id="usersTable" class="display nowrap" style="width: 100%;">
@@ -42,104 +46,6 @@ include 'sidebar.php';
         </thead>
         <tbody></tbody>
     </table>
-</div>
-
-<!-- Add User Modal -->
-<script>
-$('#openAddModal').on('click', function (e) {
-    e.preventDefault();
-
-    Swal.fire({
-        title: 'Add New User',
-        html: `
-            <input id="swalFirstName" class="swal2-input" placeholder="First Name" required>
-            <input id="swalLastName" class="swal2-input" placeholder="Last Name" required>
-            <input id="swalEmail" class="swal2-input" type="email" placeholder="Email" required>
-            <input id="swalAddress" class="swal2-input" placeholder="Address">
-            <input id="swalPhoneNumber" class="swal2-input" placeholder="Phone Number">
-            <select id="swalRole" class="swal2-select" required>
-                <option value="">Select Role</option>
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="user">User</option>
-            </select>
-            <input id="swalPassword" class="swal2-input" type="password" placeholder="Password" required>
-        `,
-        focusConfirm: false,
-        preConfirm: () => {
-            const firstName = $('#swalFirstName').val();
-            const lastName = $('#swalLastName').val();
-            const email = $('#swalEmail').val();
-            const address = $('#swalAddress').val();
-            const phone = $('#swalPhoneNumber').val();
-            const role = $('#swalRole').val();
-            const password = $('#swalPassword').val();
-
-            if (!firstName || !lastName || !email || !role || !password) {
-                Swal.showValidationMessage('Please fill all required fields');
-                return false;
-            }
-
-            return { firstName, lastName, email, address, phone, role, password };
-        },
-        showCancelButton: true,
-        confirmButtonText: 'Add User',
-    }).then((result) => {
-        if (result.isConfirmed && result.value) {
-            const token = localStorage.getItem("token");
-            $.ajax({
-                url: "http://127.0.0.1:8000/api/users/store/user",
-                type: "POST",
-                headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-                data: {
-                    firstname: result.value.firstName,
-                    lastname: result.value.lastName,
-                    email: result.value.email,
-                    address: result.value.address,
-                    phone_number: result.value.phone,
-                    role: result.value.role,
-                    password: result.value.password
-                },
-                success: function () {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'User Added',
-                        text: 'The user has been added successfully.'
-                    });
-                    loadUsers();
-                },  
-                error: function (xhr) {
-                    let errorMsg = "Failed to add user.";
-                    if (xhr.responseJSON?.message) {
-                        errorMsg += " " + xhr.responseJSON.message;
-                    }
-                    Swal.fire('Error', errorMsg, 'error');
-                }
-            });
-        }
-    });
-});
-</script>
-
-
-<!-- Edit User Modal -->
-<div id="editUserModal" class="modal">
-    <div class="modal-content">
-        <h2>Edit User</h2>
-        <form id="editUserForm">
-            <input type="text" id="editFirstName" placeholder="First Name" />
-            <input type="text" id="editLastName" placeholder="Last Name" />
-            <input type="email" id="editEmail" placeholder="Email" />
-            <input type="text" id="editAddress" placeholder="Address" />
-            <input type="text" id="editPhoneNumber" placeholder="Phone Number" />
-            <select id="editRole">
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="user">User</option>
-            </select>
-            <button type="button" id="saveUserChanges">Update User</button>
-        </form>
-    </div>
 </div>
 
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
@@ -188,63 +94,162 @@ $(document).ready(function () {
 
     loadUsers();
 
-    // Trigger Add Modal
-    $('#openAddModal').on('click', function (e) {
-        e.preventDefault();
-        $('#addUserModal').css('display', 'flex');
-    });
-
-    // Close Modals
-    $(window).on('click', function (e) {
-        if ($(e.target).is('#addUserModal')) $('#addUserModal').hide();
-        if ($(e.target).is('#editUserModal')) $('#editUserModal').hide();
-    });
-
-    // Load separate handlers
     handleAddUser(token, loadUsers);
     handleEditUser(token, loadUsers);
     handleDeleteUser(token, loadUsers);
+
+// Import button handler
+$('#importBtn').on('click', function () {
+    Swal.fire({
+        title: 'Import Users',
+        html: `<input type="file" id="importFile" accept=".csv,.xlsx,.xls" class="swal2-input">`,
+        confirmButtonText: 'Upload',
+        showCancelButton: true,
+        preConfirm: () => {
+            const fileInput = document.getElementById('importFile');
+            if (!fileInput.files[0]) {
+                Swal.showValidationMessage('Please select a file to import.');
+                return false;
+            }
+            const file = fileInput.files[0];
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            return fetch('http://127.0.0.1:8000/api/users/import', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`  // Ensure `token` is defined elsewhere
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.errors) {
+                    Swal.showValidationMessage('Import completed with errors: ' + data.errors.join(', '));
+                    return false;
+                } else {
+                    Swal.fire('Success', 'Users imported successfully.', 'success');
+                    loadUsers();  // Reload the user table
+                    return true;
+                }
+            })
+            .catch(err => {
+                Swal.showValidationMessage('Import failed: ' + err);
+                return false;
+            });
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            // Success message already handled inside preConfirm
+        }
+    });
 });
-</script>
-<script>
+
+
+    // Export button handler
+    $('#exportBtn').on('click', function () {
+        const token = localStorage.getItem("token");
+
+        fetch('http://127.0.0.1:8000/api/users/export', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'text/csv'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'usersexport.xlsx'; 
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Error exporting users:', error);
+            Swal.fire('Error', 'Failed to export user list.', 'error');
+        });
+    });
+
+});
+
 function handleAddUser(token, reloadCallback) {
-    $('#addUserBtn').on('click', function () {
-        $.ajax({
-            url: "http://127.0.0.1:8000/api/users",
-            type: "POST",
-            headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-            data: {
-                firstname: $('#newFirstName').val(),
-                lastname: $('#newLastName').val(),
-                email: $('#newEmail').val(),
-                address: $('#newAddress').val(),
-                phone_number: $('#newPhoneNumber').val(),
-                role: $('#newRole').val(),
-                password: $('#newPassword').val(),
+    $('#openAddModal').on('click', function (e) {
+        e.preventDefault();
+        Swal.fire({
+            title: 'Add New User',
+            html: `
+                <input id="swalFirstName" class="swal2-input" placeholder="First Name" required>
+                <input id="swalLastName" class="swal2-input" placeholder="Last Name" required>
+                <input id="swalEmail" class="swal2-input" type="email" placeholder="Email" required>
+                <input id="swalAddress" class="swal2-input" placeholder="Address">
+                <input id="swalPhoneNumber" class="swal2-input" placeholder="Phone Number">
+                <select id="swalRole" class="swal2-select" required>
+                    <option value="">Select Role</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="user">User</option>
+                </select>
+                <input id="swalPassword" class="swal2-input" type="password" placeholder="Password" required>
+            `,
+            focusConfirm: false,
+            preConfirm: () => {
+                const firstName = $('#swalFirstName').val();
+                const lastName = $('#swalLastName').val();
+                const email = $('#swalEmail').val();
+                const address = $('#swalAddress').val();
+                const phone = $('#swalPhoneNumber').val();
+                const role = $('#swalRole').val();
+                const password = $('#swalPassword').val();
+
+                if (!firstName || !lastName || !email || !role || !password) {
+                    Swal.showValidationMessage('Please fill all required fields');
+                    return false;
+                }
+
+                return { firstName, lastName, email, address, phone, role, password };
             },
-            success: function () {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'User Added',
-                    text: 'The user has been added successfully.',
-                });
-                $('#addUserModal').hide();
-                $('#addUserForm')[0].reset();
-                reloadCallback();
-            },
-            error: function () {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Add Failed',
-                    text: 'Failed to add user. Please check the form and try again.',
+            showCancelButton: true,
+            confirmButtonText: 'Add User',
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                $.ajax({
+                    url: "http://127.0.0.1:8000/api/users/store/user",
+                    type: "POST",
+                    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+                    data: {
+                        firstname: result.value.firstName,
+                        lastname: result.value.lastName,
+                        email: result.value.email,
+                        address: result.value.address,
+                        phone_number: result.value.phone,
+                        role: result.value.role,
+                        password: result.value.password
+                    },
+                    success: function () {
+                        Swal.fire('User Added', 'The user has been added successfully.', 'success');
+                        reloadCallback();
+                    },  
+                    error: function (xhr) {
+                        let errorMsg = "Failed to add user.";
+                        if (xhr.responseJSON?.message) {
+                            errorMsg += " " + xhr.responseJSON.message;
+                        }
+                        Swal.fire('Error', errorMsg, 'error');
+                    }
                 });
             }
         });
     });
 }
-</script>
 
-<script>
 function handleEditUser(token, reloadCallback) {
     $('#usersTable').on('click', '.edit-btn', function () {
         const id = $(this).data('id');
@@ -298,22 +303,13 @@ function handleEditUser(token, reloadCallback) {
                     }
                 }).then((result) => {
                     if (result.isConfirmed && result.value) {
-                        const data = result.value;
-
                         $.ajax({
                             url: `http://127.0.0.1:8000/api/users/update`,
                             type: "POST",
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                                Accept: "application/json"
-                            },
-                            data: data,
+                            headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+                            data: result.value,
                             success: function () {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'User Updated',
-                                    text: 'User information has been successfully updated.',
-                                });
+                                Swal.fire('User Updated', 'User information has been successfully updated.', 'success');
                                 reloadCallback();
                             },
                             error: function (xhr) {
@@ -321,11 +317,7 @@ function handleEditUser(token, reloadCallback) {
                                 if (xhr.responseJSON && xhr.responseJSON.message) {
                                     errMsg += " " + xhr.responseJSON.message;
                                 }
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Update Failed',
-                                    text: errMsg,
-                                });
+                                Swal.fire('Error', errMsg, 'error');
                             }
                         });
                     }
@@ -337,9 +329,7 @@ function handleEditUser(token, reloadCallback) {
         });
     });
 }
-</script>
 
-<script>
 function handleDeleteUser(token, reloadCallback) {
     $('#usersTable').on('click', '.delete-btn', function () {
         const id = $(this).data('id');
@@ -370,6 +360,5 @@ function handleDeleteUser(token, reloadCallback) {
     });
 }
 </script>
-
 </body>
 </html>
