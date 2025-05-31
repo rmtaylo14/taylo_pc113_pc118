@@ -125,43 +125,82 @@ class UserController extends Controller
 
 
 
-public function register(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'firstname' => 'required|string|max:255',
-        'lastname' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255|unique:users',
-        'address' => 'nullable|string|max:255',
-        'phone_number' => 'nullable|string|max:20',
-        'password' => 'required|string|min:6',
-        'role' => 'in:user'
-    ]);
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'address' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'password' => 'required|string|min:6',
+            'role' => 'in:user'
+        ]);
 
-    if ($validator->fails()) {
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::create([
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'email' => $request->email,
+            'address' => $request->address,
+            'phone_number' => $request->phone_number,
+            'password' => Hash::make($request->password),
+            'role' => 'user'
+        ]);
+
+        // // Corrected to pass user's firstname
+        // Mail::to($user->email)->send(new CredentialMail($user->firstname));
+
         return response()->json([
-            'message' => 'Validation failed',
-            'errors' => $validator->errors()
-        ], 422);
+            'message' => 'User registered successfully',
+            'user' => $user
+        ], 201);
     }
 
-    $user = User::create([
-        'firstname' => $request->firstname,
-        'lastname' => $request->lastname,
-        'email' => $request->email,
-        'address' => $request->address,
-        'phone_number' => $request->phone_number,
-        'password' => Hash::make($request->password),
-        'role' => 'user'
-    ]);
 
-    // // Corrected to pass user's firstname
-    // Mail::to($user->email)->send(new CredentialMail($user->firstname));
+    public function export()
+    {
+        $users = User::all(); // You can adjust the query as needed
 
-    return response()->json([
-        'message' => 'User registered successfully',
-        'user' => $user
-    ], 201);
-}
+        $filename = "users_export.csv";
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $columns = ['ID', 'First Name', 'Last Name', 'Email', 'Address', 'Phone Number', 'Role'];
+
+        $callback = function() use($users, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($users as $user) {
+                fputcsv($file, [
+                    $user->id,
+                    $user->firstname,
+                    $user->lastname,
+                    $user->email,
+                    $user->address,
+                    $user->phone_number,
+                    $user->role
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return Response::stream($callback, 200, $headers);
+    }
+
 
 
 
@@ -170,18 +209,23 @@ public function register(Request $request)
     {
         try {
             $user = User::findOrFail($id);
+
+            // Delete all orders associated with the user
+            $user->orders()->delete();  // This assumes you have a 'orders' relationship in User model
+
             $user->delete();
 
             return response()->json([
-                'message' => 'User deleted successfully',
+                'message' => 'User and their orders deleted successfully',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'message' => 'Error deleting user',
+                'message' => 'Error deleting user and orders',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
+
 
     public function user()
     {

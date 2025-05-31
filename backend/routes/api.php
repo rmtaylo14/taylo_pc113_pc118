@@ -11,6 +11,8 @@ use App\Http\Middleware\AccessMiddleware;
 use App\Http\Controllers\TokenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserExportController;
+use App\Http\Controllers\UserImportController;
 
 // Authentication
 Route::post('/login', [AuthController::class, 'login']);
@@ -89,11 +91,12 @@ Route::get('/delivery-grouped', [OrderController::class, 'deliveriesGroupedByUse
 
 Route::middleware('auth:sanctum')->get('/user/orders', [OrderController::class, 'userOrders']);
 
-
 Route::middleware('auth:sanctum')->put('/orders/{id}/status', [OrderController::class, 'updateStatus']);
 
-
 Route::get('/deliveries', [OrderController::class, 'deliveries']);
+
+Route::get('/users/export', [UserExportController::class, 'export']);
+Route::post('/users/import', [UserImportController::class, 'import']);
 
 
 // Token-based access control

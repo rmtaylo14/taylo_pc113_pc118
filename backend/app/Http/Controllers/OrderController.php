@@ -49,11 +49,16 @@ class OrderController extends Controller
     }
 
     // Show specific order with items loaded
-    public function show(Order $order)
+    public function show($id) 
     {
-        $order->load('items');
+        $order = Order::with(['user', 'items'])->findOrFail($id);
+        // For debugging, add this:
+        if ($order->user) {
+            $order->user->name = $order->user->name ?? 'Unknown Name';
+        }
         return response()->json($order);
     }
+
 
     // Update order (optional, keep your existing update logic if needed)
     public function update(Request $request, Order $order)
@@ -88,7 +93,7 @@ class OrderController extends Controller
         return [
             'user' => [
                 'id' => $user->id,
-                'name' => $user->firstname . ' ' . $user->lastname,
+                'name' => trim($user->firstname . ' ' . $user->lastname) ?: 'N/A',
                 'address' => $user->address ?? 'N/A',
                 'phone_number' => $user->phone_number ?? 'N/A',
             ],
@@ -160,4 +165,10 @@ class OrderController extends Controller
 
         return response()->json(['message' => 'Order deleted successfully.']);
     }
+
+    public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
 }
